@@ -378,6 +378,16 @@ protected:
         return --(end() - static_cast<difference_type>(pos));
     }
 
+    /**
+     * @brief Assigns an entity to a sparse set.
+     * @param entt A valid identifier.
+     * @param force_back Force back insertion.
+     * @return Iterator pointing to the emplaced element.
+     */
+    virtual void *try_emplace_uninitialized(const Entity entt, const bool force_back) {
+        return nullptr;
+    }
+
     /*! @brief Forwards variables to derived classes, if any. */
     // NOLINTNEXTLINE(performance-unnecessary-value-param)
     virtual void bind_any(any) noexcept {}
@@ -797,6 +807,32 @@ public:
     iterator push(const entity_type entt, const void *elem = nullptr) {
         return try_emplace(entt, false, elem);
     }
+
+    /**
+     * @brief Assigns an entity to a sparse set without initializing
+     *
+     * @warning
+     * Attempting to assign an entity that already belongs to the sparse set
+     * results in undefined behavior. Should call finalize_initialization()
+     * when the initialization is finished
+     *
+     * @param entt A valid identifier.
+     * @return A pointer pointing to the emplaced element memory in case of success, nullptr otherwise.
+     */
+    void *push_uninitialized(const entity_type entt) {
+        return try_emplace_uninitialized(entt, false);
+    }
+
+    /**
+     * @brief Indicated a previous push_uninitialized memory has initialized
+     *
+     * @warning
+     * Attempting to bump the version of an entity that doesn't belong to the
+     * sparse set results in undefined behavior.
+     *
+     * @param entt A valid identifier.
+     */
+    virtual void finalize_initialization(const entity_type entt) {}
 
     /**
      * @brief Assigns one or more entities to a sparse set.

@@ -276,6 +276,18 @@ class basic_storage: public basic_sparse_set<Entity, typename std::allocator_tra
         return it;
     }
 
+    auto push_uninitialized(const Entity entt, const bool force_back) {
+        const auto it = base_type::try_emplace(entt, force_back);
+
+        ENTT_TRY {
+            return to_address(assure_at_least(static_cast<size_type>(it.index())));
+        }
+        ENTT_CATCH {
+            base_type::pop(it, it + 1u);
+            ENTT_THROW;
+        }
+    }
+
     void shrink_to_size(const std::size_t sz) {
         const auto from = (sz + traits_type::page_size - 1u) / traits_type::page_size;
         allocator_type allocator{get_allocator()};
@@ -390,6 +402,24 @@ protected:
             } else {
                 return base_type::end();
             }
+        }
+    }
+
+    /**
+     * @brief Assigns an entity to a storage without initializing.
+     * @param entt A valid identifier.
+     * @param force_back Force back insertion.
+     * @return Iterator pointing to the emplaced element.
+     */
+    void* try_emplace_uninitialized([[maybe_unused]] const Entity entt, [[maybe_unused]] const bool force_back) override {
+        const auto it = base_type::try_emplace(entt, force_back);
+
+        ENTT_TRY {
+            return to_address(assure_at_least(static_cast<size_type>(it.index())));
+        }
+        ENTT_CATCH {
+            base_type::pop(it, it + 1u);
+            ENTT_THROW;
         }
     }
 

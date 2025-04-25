@@ -115,6 +115,23 @@ private:
         return it;
     }
 
+    /**
+     * @brief Indicated a previous push_uninitialized memory has initialized
+     *
+     * @warning
+     * Attempting to bump the version of an entity that doesn't belong to the
+     * sparse set results in undefined behavior.
+     *
+     * @param entt A valid identifier.
+     */
+    void finalize_initialization(const typename underlying_type::entity_type entt) final {
+        const auto it = underlying_type::find(entt);
+
+        if(auto &reg = owner_or_assert(); it != underlying_type::base_type::end()) {
+            construction.publish(reg, *it);
+        }
+    }
+
     void bind_any(any value) noexcept final {
         owner = any_cast<basic_registry_type>(&value);
 
